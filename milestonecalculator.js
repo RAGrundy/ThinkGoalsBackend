@@ -1,8 +1,8 @@
 module.exports = {
     CalculateMilestones: function (cardBalanceSchedule, savingsGoal) {
         var incomes = CalculateIncomes(cardBalanceSchedule);
-        var totalIncomeAmount = CalculateTotalIncomeAmount(incomes)
-        var percentageOfIncomeToMilestone = (savingsGoal[0].EndAmount - savingsGoal[0].StartAmount) / totalIncomeAmount;
+        var maximumIncomeAmount = CalculateMaximumIncomeAmount(incomes);
+        var percentageOfIncomeToMilestone = (savingsGoal[0].EndAmount - savingsGoal[0].StartAmount) / maximumIncomeAmount;
         var milestones = CalculateIndividualMilestones(incomes, percentageOfIncomeToMilestone);
 
         cardBalanceSchedule.forEach(element => {
@@ -18,29 +18,37 @@ module.exports = {
 
 function CalculateIncomes(cardBalanceSchedule) {
     var incomes = [];
-    cardBalanceSchedule.forEach(element => {
-        if (element.IsIncome) {
-            incomes.push(element);
+    for (i = 0; i < cardBalanceSchedule.length; i++) {
+        if (i > 0) {
+            if (cardBalanceSchedule[i].IsIncome) {
+                cardBalanceSchedule[i].IncomeAmount = cardBalanceSchedule[i].CardBalance - cardBalanceSchedule[i - 1].CardBalance;
+                incomes.push(cardBalanceSchedule[i]);
+            }
         }
-    });
+    }
     return incomes;
 }
 
-function CalculateTotalIncomeAmount(incomes) {
+function CalculateMaximumIncomeAmount(incomes) {
     var totalIncomeAmount = 0.00;
     incomes.forEach(element => {
-        totalIncomeAmount = totalIncomeAmount + element.CardBalance
+        totalIncomeAmount = totalIncomeAmount + element.IncomeAmount;
     });
     return totalIncomeAmount;
 }
 
 function CalculateIndividualMilestones(incomes, percentageOfIncomeToMilestone) {
     var milestones = [];
+    var previousMilestone;
     incomes.forEach(element => {
         var newObject = {
             Date: element.Date,
-            Amount: (Math.round(element.CardBalance * percentageOfIncomeToMilestone))
+            Amount: (Math.round(element.IncomeAmount * percentageOfIncomeToMilestone))
         }
+        if (previousMilestone) {
+            newObject.Amount = newObject.Amount + previousMilestone;
+        }
+        previousMilestone = newObject.Amount;
         milestones.push(newObject);
     });
     return milestones;
