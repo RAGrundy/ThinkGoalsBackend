@@ -91,3 +91,20 @@ app.post("/savinggoals", (request, response) => {
         response.send(result.result);
     });
 });
+
+app.get("/todaysdate", (request, response) => {
+    let cif = request.query.cifkey;
+
+    if (typeof cif !== 'undefined' && cif) {
+        collection = database.collection("TodaysDate");
+        collection.find({ CifKey: cif }).toArray((error, result) => {
+            if (error) {
+                return response.status(500).send(error);
+            }
+            response.send(result);
+        });
+    }
+    else {
+        return response.status(400).send("cif not provided");
+    }
+});
