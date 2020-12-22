@@ -78,10 +78,10 @@ app.post("/savinggoals", (request, response) => {
         $set:
         {
             CifKey: request.body.CifKey,
-            StartDate: request.body.StartDate.$date,
+            StartDate: request.body.StartDate,
             StartAmount: request.body.StartAmount,
             EndAmount: request.body.EndAmount,
-            EndDate: request.body.EndDate.$date,
+            EndDate: request.body.EndDate,
             SavingsName: request.body.SavingsName
         }
     }, { upsert: true }, (error, result) => {
