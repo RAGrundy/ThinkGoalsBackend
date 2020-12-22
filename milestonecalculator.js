@@ -1,9 +1,9 @@
 module.exports = {
     CalculateMilestones: function (cardBalanceSchedule, savingsGoal) {
-        var incomes = CalculateIncomes(cardBalanceSchedule);
+        var incomes = CalculateIncomes(cardBalanceSchedule, savingsGoal);
         var maximumIncomeAmount = CalculateMaximumIncomeAmount(incomes);
         var percentageOfIncomeToMilestone = (savingsGoal[0].EndAmount - savingsGoal[0].StartAmount) / maximumIncomeAmount;
-        var milestones = CalculateIndividualMilestones(incomes, percentageOfIncomeToMilestone);
+        var milestones = CalculateIndividualMilestones(incomes, percentageOfIncomeToMilestone, savingsGoal);
 
         cardBalanceSchedule.forEach(element => {
             var result = milestones.filter(obj => {
@@ -16,11 +16,13 @@ module.exports = {
     }
 }
 
-function CalculateIncomes(cardBalanceSchedule) {
+function CalculateIncomes(cardBalanceSchedule, savingsGoal) {
     var incomes = [];
-    for (i = 0; i < cardBalanceSchedule.length; i++) {
+    for (var i = 0; i < cardBalanceSchedule.length; i++) {
         if (i > 0) {
-            if (cardBalanceSchedule[i].IsIncome) {
+            if (cardBalanceSchedule[i].IsIncome
+                && (new Date(cardBalanceSchedule[i].Date) >= new Date(savingsGoal[0].StartDate))
+                && (new Date(cardBalanceSchedule[i].Date) <= new Date(savingsGoal[0].EndDate))) {
                 cardBalanceSchedule[i].IncomeAmount = cardBalanceSchedule[i].CardBalance - cardBalanceSchedule[i - 1].CardBalance;
                 incomes.push(cardBalanceSchedule[i]);
             }
@@ -37,19 +39,22 @@ function CalculateMaximumIncomeAmount(incomes) {
     return totalIncomeAmount;
 }
 
-function CalculateIndividualMilestones(incomes, percentageOfIncomeToMilestone) {
-    var milestones = [];
-    var previousMilestone;
+function CalculateIndividualMilestones(incomes, percentageOfIncomeToMilestone, savingsGoal) {
+    var milestones = [{
+        Date: savingsGoal[0].StartDate,
+        Amount: savingsGoal[0].StartAmount
+    }];
+
+    var previousMilestone = savingsGoal[0].StartAmount;
     incomes.forEach(element => {
         var newObject = {
             Date: element.Date,
             Amount: (Math.round(element.IncomeAmount * percentageOfIncomeToMilestone))
-        }
-        if (previousMilestone) {
-            newObject.Amount = newObject.Amount + previousMilestone;
-        }
+        };
+        newObject.Amount = newObject.Amount + previousMilestone;
         previousMilestone = newObject.Amount;
         milestones.push(newObject);
     });
+    milestones[milestones.length - 1].Amount = savingsGoal[0].EndAmount;
     return milestones;
 }
